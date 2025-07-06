@@ -1,6 +1,7 @@
 
 class Value:
     """ stores a single scalar value and its gradient """
+    # wraps scalar values and tracks operations to implement automatic differentiation and compute gradients automatically
 
     def __init__(self, data, _children=(), _op=''):
         self.data = data
@@ -56,6 +57,8 @@ class Value:
         # topological order all of the children in the graph
         topo = []
         visited = set()
+
+        # builds topological order using depth-first search so that nodes are processed after their dependencies
         def build_topo(v):
             if v not in visited:
                 visited.add(v)
@@ -64,8 +67,10 @@ class Value:
                 topo.append(v)
         build_topo(self)
 
-        # go one variable at a time and apply the chain rule to get its gradient
+        # go one variable at a time and apply the chain rule to get its gradient in reverse topological order
         self.grad = 1
+        # starting with gradient 1 at the output, 
+        # each node's _backward function accumulates gradients from all nodes on which it depends
         for v in reversed(topo):
             v._backward()
 
